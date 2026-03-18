@@ -1,0 +1,11 @@
+name: shape_active_learning
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - pip:
+    - opencv-python>=4.8.0
+    - numpy>=1.24.0
+    - scikit-learn>=1.3.0
