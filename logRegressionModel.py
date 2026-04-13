@@ -6,24 +6,14 @@ class LogisticRegressionModel(torch.nn.Module):
         self.linear = torch.nn.Linear(input_dim, output_dim)
 
     def forward(self, x):
-        outputs = self.linear(x)
-        return outputs
+        return self.linear(x)
 
     def predict(self, x):
+        """Returns predicted class indices without gradients."""
         with torch.no_grad():
-            outputs = self.forward(x)
-            predicted = torch.argmax(outputs, dim=1)
-        return predicted
-    
-    def backward(self, x, y_true):
-        criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.SGD(self.parameters(), lr=0.01)
+            return self.forward(x).argmax(dim=1)
 
-        optimizer.zero_grad()
-        outputs = self.forward(x)
-        loss = criterion(outputs, y_true)
-        loss.backward()
-        optimizer.step()
-
-        return loss.item()
-    
+    def confidence(self, x):
+        """Returns softmax probabilities — useful for uncertainty scoring in test.py."""
+        with torch.no_grad():
+            return torch.nn.functional.softmax(self.forward(x), dim=1)
