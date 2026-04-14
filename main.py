@@ -1,3 +1,4 @@
+import json
 import torch
 import pandas as pd
 from torch.utils.data import DataLoader, TensorDataset
@@ -12,7 +13,27 @@ BATCH_SIZE = 16
 LR = 0.01
 
 # ── Load & prep data ──────────────────────────────────────────────────────────
-df = pd.read_csv('dataset.csv')
+# Parse simulation JSON into (query_number, confidence, label, is_correct) rows.
+# learning_type 'active'  → robot self-initiates queries (SNOWMAN, ALIEN)
+# learning_type 'passive' → robot only responds, no self-initiated queries (HOUSE, ICE_CREAM)
+with open('simulation_data.json') as f:
+    sim = json.load(f)
+
+rows = []
+for session in sim['sessions']:
+    learning_type = session['learning_type']   # 'active' or 'passive'
+    for step in session['steps']:
+        rows.append({
+            'query_number': step['interaction_step'],
+            'confidence':   step['robot_confidence'],
+            'label':        learning_type,
+            'is_correct':   step['robot_correct'],
+        })
+
+df = pd.DataFrame(rows)
+print(f"Loaded {len(df)} interaction steps from simulation_data.json")
+print(df.groupby(['label', 'is_correct']).size().to_string(), "\n")
+
 df['label'] = df['label'].map({'active': 1, 'passive': 0})
 
 X = torch.tensor(df[['query_number', 'confidence', 'label']].values, dtype=torch.float32)
